@@ -1,0 +1,22 @@
+service:
+  name: aws-iam-access-key-rotation-enforcer
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: eu-west-1
+  iamRoleStatements:
+    -  Effect: "Allow"
+       Action:
+         - "iam:ListUsers"
+         - "iam:UpdateAccessKey"
+         - "iam:ListAccessKeys"
+         - "iam:GetAccessKeyLastUsed"
+       Resource: "*"
+
+functions:
+  check:
+    handler: handler.check
