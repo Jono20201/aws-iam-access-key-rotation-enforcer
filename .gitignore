@@ -65,3 +65,6 @@ typings/
 
 # Webpack directories
 .webpack
+
+# Webstorm meta files
+.idea

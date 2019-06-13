@@ -4,19 +4,39 @@ service:
 plugins:
   - serverless-webpack
 
+custom:
+  notificationEmailAddress: ${opt:notification-email}
+
 provider:
   name: aws
   runtime: nodejs10.x
   region: eu-west-1
   iamRoleStatements:
-    -  Effect: "Allow"
-       Action:
-         - "iam:ListUsers"
-         - "iam:UpdateAccessKey"
-         - "iam:ListAccessKeys"
-         - "iam:GetAccessKeyLastUsed"
-       Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "iam:ListUsers"
+        - "iam:UpdateAccessKey"
+        - "iam:ListAccessKeys"
+        - "iam:GetAccessKeyLastUsed"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "sns:Publish"
+      Resource: { "Fn::Join": [":", ["arn:aws:sns:${self:provider.region}", { "Ref": "AWS::AccountId" }, { "Fn::GetAtt": [ "AccessKeyRotationAlerts", TopicName ] } ] ]  }
 
 functions:
   check:
     handler: handler.check
+    environment:
+      TOPIC_ARN: { "Fn::Join": [":", ["arn:aws:sns:${self:provider.region}", { "Ref": "AWS::AccountId" }, { "Fn::GetAtt": [ "AccessKeyRotationAlerts", TopicName ] } ] ]  }
+
+resources:
+  Resources:
+    AccessKeyRotationAlerts:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: 'Access Key Rotation Alerts'
+        TopicName: AccessKeyRotationAlerts
+        Subscription:
+        - Endpoint: ${self:custom.notificationEmailAddress}
+          Protocol: email
