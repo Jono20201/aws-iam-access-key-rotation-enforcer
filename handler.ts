@@ -6,10 +6,10 @@ import { AccessKeyMetadata } from "aws-sdk/clients/iam";
 /*
  * Variables & Configuration
  */
-const MAXIMUM_ACCESS_KEY_AGE_IN_DAYS = 90;
-const WARN_ACCESS_KEY_AGE_IN_DAYS = 83;
+const MAXIMUM_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.MAXIMUM_ACCESS_KEY_AGE_IN_DAYS) || 90;
+const WARN_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.MAXIUM_ACCESS_KEY_AGE_IN_DAYS) || 83;
 
-const ACTUALLY_DISABLE_KEYS = false;
+const ACTUALLY_DISABLE_KEYS = process.env.DISABLE_KEYS == "true" || false;
 
 const iam = new AWS.IAM();
 const sns = new AWS.SNS();
@@ -112,7 +112,6 @@ keys will be disabled again the next time this script runs.\n\n`;
     }).promise();
 
     console.log(process.env.TOPIC_ARN, response);
-
     if (!ACTUALLY_DISABLE_KEYS) return;
 
     await Promise.all(
