@@ -5,7 +5,7 @@ plugins:
   - serverless-webpack
 
 custom:
-  notificationEmailAddress: ${opt:notification-email}
+  notificationEmailAddress: "dev@pickr.works"
 
 provider:
   name: aws
@@ -27,6 +27,8 @@ provider:
 functions:
   check:
     handler: handler.check
+    events:
+      - schedule: rate(1 day)
     environment:
       TOPIC_ARN: { "Fn::Join": [":", ["arn:aws:sns:${self:provider.region}", { "Ref": "AWS::AccountId" }, { "Fn::GetAtt": [ "AccessKeyRotationAlerts", TopicName ] } ] ]  }
 
