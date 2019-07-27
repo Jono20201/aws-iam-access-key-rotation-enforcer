@@ -28,7 +28,7 @@ functions:
   check:
     handler: handler.check
     events:
-      - schedule: rate(1 day)
+      - schedule: cron(15 10 ? * * *)
     environment:
       TOPIC_ARN: { "Fn::Join": [":", ["arn:aws:sns:${self:provider.region}", { "Ref": "AWS::AccountId" }, { "Fn::GetAtt": [ "AccessKeyRotationAlerts", TopicName ] } ] ]  }
 

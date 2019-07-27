@@ -105,6 +105,8 @@ keys will be disabled again the next time this script runs.\n\n`;
       })
     }
 
+    console.log(content);
+
     let response = await sns.publish({
       TopicArn: process.env.TOPIC_ARN,
       Subject: "[ACTION REQUIRED] Access Key Rotation Report",
