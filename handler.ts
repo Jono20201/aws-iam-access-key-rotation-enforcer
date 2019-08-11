@@ -70,7 +70,7 @@ const getCategorisedKeys = async (
 };
 
 const keyString = key =>  {
-  return `${key.AccessKeyId} - Owned by: ${key.UserName} - Created: ${format(key.CreateDate, "MM/DD/YYYY HH:mm")} - Last Used: ${key.LastAccessedDate ? format(key.LastUsedDate, "MM/DD/YYYY HH:mm") : "Never"}\n\n`;
+  return `${key.AccessKeyId} - Owned by: ${key.UserName} - Created: ${format(key.CreateDate, "MM/DD/YYYY HH:mm")} - Last Used: ${key.LastUsedDate ? format(key.LastUsedDate, "MM/DD/YYYY HH:mm") : "Never"}\n\n`;
 };
 
 export const check = async () => {
