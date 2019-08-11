@@ -40,6 +40,9 @@ const getCategorisedKeys = async (
 
       await Promise.all(
         accessKeyList.AccessKeyMetadata.map(async accessKey => {
+
+          if(accessKey.Status === "Inactive") return;
+
           const lastUsed = (await iam
             .getAccessKeyLastUsed({AccessKeyId: accessKey.AccessKeyId})
             .promise()).AccessKeyLastUsed;
