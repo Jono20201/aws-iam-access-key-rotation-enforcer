@@ -7,7 +7,7 @@ import { AccessKeyMetadata } from "aws-sdk/clients/iam";
  * Variables & Configuration
  */
 const MAXIMUM_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.MAXIMUM_ACCESS_KEY_AGE_IN_DAYS) || 90;
-const WARN_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.MAXIUM_ACCESS_KEY_AGE_IN_DAYS) || 83;
+const WARN_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.WARN_ACCESS_KEY_AGE_IN_DAYS) || 83;
 
 const ACTUALLY_DISABLE_KEYS = process.env.DISABLE_KEYS == "true" || false;
 
