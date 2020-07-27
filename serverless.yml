@@ -5,7 +5,7 @@ plugins:
   - serverless-webpack
 
 custom:
-  notificationEmailAddress: "dev@pickr.works"
+  notificationEmailAddress: "jonathan.martin@pickr.works"
 
 provider:
   name: aws
