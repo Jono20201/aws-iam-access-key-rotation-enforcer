@@ -6,8 +6,10 @@ import { AccessKeyMetadata } from "aws-sdk/clients/iam";
 /*
  * Variables & Configuration
  */
-const MAXIMUM_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.MAXIMUM_ACCESS_KEY_AGE_IN_DAYS) || 90;
-const WARN_ACCESS_KEY_AGE_IN_DAYS = Number.parseInt(process.env.WARN_ACCESS_KEY_AGE_IN_DAYS) || 83;
+const MAXIMUM_ACCESS_KEY_AGE_IN_DAYS =
+  Number.parseInt(process.env.MAXIMUM_ACCESS_KEY_AGE_IN_DAYS) || 90;
+const WARN_ACCESS_KEY_AGE_IN_DAYS =
+  Number.parseInt(process.env.WARN_ACCESS_KEY_AGE_IN_DAYS) || 83;
 
 const ACTUALLY_DISABLE_KEYS = process.env.DISABLE_KEYS == "true" || false;
 
@@ -33,23 +35,24 @@ const getCategorisedKeys = async (
   const warningKeys: AccessKey[] = [];
 
   await Promise.all(
-    userList.Users.map(async user => {
+    userList.Users.map(async (user) => {
       const accessKeyList = await iam
-        .listAccessKeys({UserName: user.UserName})
+        .listAccessKeys({ UserName: user.UserName })
         .promise();
 
       await Promise.all(
-        accessKeyList.AccessKeyMetadata.map(async accessKey => {
+        accessKeyList.AccessKeyMetadata.map(async (accessKey) => {
+          if (accessKey.Status === "Inactive") return;
 
-          if(accessKey.Status === "Inactive") return;
+          const lastUsed = (
+            await iam
+              .getAccessKeyLastUsed({ AccessKeyId: accessKey.AccessKeyId })
+              .promise()
+          ).AccessKeyLastUsed;
 
-          const lastUsed = (await iam
-            .getAccessKeyLastUsed({AccessKeyId: accessKey.AccessKeyId})
-            .promise()).AccessKeyLastUsed;
-
-          const keyWithLastUsed: AccessKey = {
+          const keyWithLastUsed: AccessKey = {¬
             ...accessKey,
-            LastUsedDate: lastUsed.LastUsedDate
+            LastUsedDate: lastUsed.LastUsedDate,
           };
 
           if (accessKey.CreateDate < maxAge) {
@@ -68,12 +71,17 @@ const getCategorisedKeys = async (
 
   return {
     expiredKeys,
-    warningKeys
+    warningKeys,
   };
 };
 
-const keyString = key =>  {
-  return `${key.AccessKeyId} - Owned by: ${key.UserName} - Created: ${format(key.CreateDate, "MM/DD/YYYY HH:mm")} - Last Used: ${key.LastUsedDate ? format(key.LastUsedDate, "MM/DD/YYYY HH:mm") : "Never"}\n\n`;
+const keyString = (key: AccessKey) => {
+  return `${key.AccessKeyId} - Owned by: ${key.UserName} - Created: ${format(
+    key.CreateDate,
+    "MM/DD/YYYY HH:mm"
+  )} - Last Used: ${
+    key.LastUsedDate ? format(key.LastUsedDate, "MM/DD/YYYY HH:mm") : "Never"
+  }\n\n`;
 };
 
 export const check = async () => {
@@ -81,9 +89,12 @@ export const check = async () => {
   const warnAge = subDays(new Date(), WARN_ACCESS_KEY_AGE_IN_DAYS);
 
   try {
-    const { expiredKeys, warningKeys } = await getCategorisedKeys(maxAge, warnAge);
+    const { expiredKeys, warningKeys } = await getCategorisedKeys(
+      maxAge,
+      warnAge
+    );
 
-    if(expiredKeys.length === 0 && warningKeys.length === 0) return;
+    if (expiredKeys.length === 0 && warningKeys.length === 0) return;
 
     let content = `** AWS Access Key Expiry Alert! **\n
 For security reasons the script that generates this email is ran regularly to enforce Access Key rotation.
@@ -95,41 +106,42 @@ The following keys have been disabled. A user with enough permissions can rotate
 been deleted, just encase the key is required for production (can be enabled quickly). Note that any re-activated
 keys will be disabled again the next time this script runs.\n\n`;
 
-      expiredKeys.forEach(key => {
+      expiredKeys.forEach((key) => {
         content += keyString(key);
-      })
+      });
     }
 
     if (warningKeys.length > 0) {
       content = ` - Upcoming Keys\nThese keys will be disabled soon. You should act early to rotate!\n\n`;
 
-      warningKeys.forEach(key => {
+      warningKeys.forEach((key) => {
         content += keyString(key);
-      })
+      });
     }
 
-    console.log(content);
+    console.log('About to send via SNS: ', content);
 
-    let response = await sns.publish({
-      TopicArn: process.env.TOPIC_ARN,
-      Subject: "[ACTION REQUIRED] Access Key Rotation Report",
-      Message: content
-    }).promise();
+    await sns
+      .publish({
+        TopicArn: process.env.TOPIC_ARN,
+        Subject: "[ACTION REQUIRED] Access Key Rotation Report",
+        Message: content,
+      })
+      .promise();
 
-    console.log(process.env.TOPIC_ARN, response);
     if (!ACTUALLY_DISABLE_KEYS) return;
 
     await Promise.all(
-      expiredKeys.map(async key => {
+      expiredKeys.map(async (key) => {
         await iam
           .updateAccessKey({
             AccessKeyId: key.AccessKeyId,
-            Status: "Inactive"
+            Status: "Inactive",
           })
           .promise();
       })
     );
   } catch (ex) {
-    console.log(ex);
+    console.error(ex);
   }
 };
