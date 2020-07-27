@@ -50,7 +50,7 @@ const getCategorisedKeys = async (
               .promise()
           ).AccessKeyLastUsed;
 
-          const keyWithLastUsed: AccessKey = {¬
+          const keyWithLastUsed: AccessKey = {
             ...accessKey,
             LastUsedDate: lastUsed.LastUsedDate,
           };
